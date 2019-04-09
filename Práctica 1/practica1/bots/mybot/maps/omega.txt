@@ -1,0 +1,8 @@
+genero:DramaComedia
+idiomas:inglespolaco
+subtitulos:espanol
+sinopsis:smismncpads_oiqmadsoiampo_iqmdpman
+web:wuneixkoa
+
+temporada3:pol85
+temporada5:tercero5

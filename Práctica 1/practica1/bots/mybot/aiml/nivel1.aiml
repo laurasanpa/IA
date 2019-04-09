@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+
+<category>
+<pattern> de que va la serie * </pattern>
+<template>
+<srai>decode <map><name><star/></name>sinopsis</map></srai>
+</template>
+</category>
+
+<category>
+<pattern> De que va (la serie)  [<set>netflix</set> <set>prime</set>]</pattern>
+<template>
+<srai>decode <map><name><star/></name>sinopsis</map></srai>
+</template>
+</category>
+
+<category>
+<pattern> De que va (la serie) * </pattern>
+<template>
+La serie <star/> no está en el catálogo. Quieres añadirla?<think><set name="topic">add</set></think>
+</template>
+</category>
+
+<!--Incluir nuevo capítulo en una serie -->
+<category>
+<pattern> Incluir nuevo capitulo </pattern>
+<template>
+De acuerdo. Por favor, indique la serie a la que pertenece.
+<think><set name="topic">capitulo2</set></think>
+</template>
+</category>
+
+<topic name = "capitulo2">
+<category>
+<pattern> [<set>netflix</set> <set>prime</set>]</pattern>
+<template> Indique ahora la temporada.
+<think><set name="serie"><star/></set></think>
+<think><set name="topic">siguientecapitulo</set></think>
+</template>
+</category>
+
+<category>
+<pattern>*</pattern>
+<template>Lo siento, no tenemos esta serie. Quiere incluirla?
+<think><set name="serie"><star/></set></think>
+<think><set name="topic">add</set></think>
+</template>
+</category>
+
+</topic>
+
+<topic name="siguientecapitulo">
+
+<category>
+<pattern> * </pattern>
+
+<template>
+<!--Busco en el map de la serie si existe la temporada-->
+<think><set var= "keys"><readkeys><get name="serie"/></readkeys></set></think>
+        <think><set name="temp2">temporada<star/></set></think>
+        
+          <think><set var="exists"><srai> FINDITEM <get name="temp2"/> IN <get var="keys"/></srai></set></think>
+        
+        <condition var="exists">
+ <!--en caso de que no exista, tengo que incluirla-->
+  <li value="0">
+            <think><set name="topic">incluirtemporada</set></think>
+						<think><set name= "temporada"><star/></set></think>
+						Indique el nombre del capitulo (no existe).
+						
+						
+ 	</li>
+<!-- si existe, continuo insertando el capítulo-->
+  <li>
+						Indique el nombre del capitulo(existe)
+  					<think><set name= "temporada"><star/></set></think>
+						<think><set name="topic">existe</set></think>
+  </li>
+        </condition>
+
+</template>
+</category>
+
+</topic>
+<topic name="existe">
+
+<category>
+<pattern> * </pattern>
+
+<template>Por ultimo, indique la duracion del mismo.
+<think><set name="capitulo"><star/></set></think>
+<think><set name="topic">yaexiste</set></think>
+</template>
+</category>
+</topic>
+
+<topic name="yaexiste">
+		
+<category>
+<pattern> * </pattern>
+<template>Capitulo incluido correctamente.
+<think><set var="antiguo"><map><name><get name="serie"/></name>temporada<get name="temporada"/></map></set></think>
+<think><set var="nuevo"><get name="antiguo"/><get name="capitulo"/><star/></set></think>
+<modifymap>
+		<name><get name="serie"/></name>
+		<key>temporada<get name="temporada"/></key>
+		<value><srai> code <get var="nuevo"/></srai></value>
+</modifymap>
+</template>
+</category>
+
+</topic>
+<topic name="incluirtemporada">
+<category>
+<pattern> * </pattern>
+<template>Por ultimo, indique la duracion del mismo.
+<think><set name="capitulo"><star/> </set></think>
+<think><set name="topic">duracion</set></think>
+</template>
+</category>
+
+</topic>
+
+<topic name="duracion">
+<category>
+<pattern> * </pattern>
+<template>Capitulo incluido correctamente.
+
+<think><set var="nuevo"><get name="capitulo"/> <star/></set></think>
+<addtomap>
+		<name><get name="serie"/></name>
+		<key>temporada<get name="temporada"/></key>
+		<value><srai> code <get var="nuevo"/></srai></value>
+</addtomap>
+</template>
+</category>
+
+</topic>
+
+<!-- Incluir nueva serie-->
+<topic name = "add">
+
+<!-- si no quiere incluir-->
+<category>
+<pattern>no ^</pattern>
+<template>
+	Está bien. No incluimos nada.
+	<set name="topic">unknown</set>
+</template>
+</category>
+<!-- si quiere incluir-->
+<category>
+<pattern>si ^</pattern>
+<template>
+	Pr favor, cree un archivo en la carpeta maps con llamado "el nombre de la serie.txt". Tras reiniciar, indique "incluir serie nombre de la serie".
+</template>
+</category>
+
+</topic>
+
+
+<category>
+<pattern>incluir serie *</pattern>
+<template>
+	Por favor, indique la plataforma a la que pertenece.
+<think><set name="serie"><star/></set></think>
+<think><set name="topic">plataforma</set></think>
+</template>
+</category>
+
+<topic name="plataforma">
+<category>
+<pattern>*</pattern>
+<template>
+<addtoset>
+	<name><star/></name>
+	<key><get name="serie"/></key>
+</addtoset>
+	Gracias, Indique ahora el genero al que pertenece.	
+<think><set name="topic">genero</set></think>
+</template>
+</category>
+</topic>
+
+
+<topic name="genero">
+<category>
+<pattern> * </pattern>
+<template>
+	<addtomap>
+	<name><get name="serie"/></name>
+	<key>genero</key>
+	<value><srai>code <star/></srai></value>
+	</addtomap>
+  genero incluido. Por favor, indique en que idiomas se puede ver la serie
+<think><set name="topic">idioma</set></think>
+</template>
+</category>
+</topic>
+
+
+<topic name="idioma">
+<category>
+<pattern> * </pattern>
+<template>
+	<addtomap>
+	<name><get name="serie"/></name>
+	<key>idiomas</key>
+	<value><srai>code <star/></srai></value>
+	</addtomap>
+  idioma incluido. Por favor, indique en que idiomas se pueden poner subtitulos
+<think><set name="topic">subtitulo</set></think>
+</template>
+</category>
+</topic>
+
+<topic name="subtitulo">
+<category>
+<pattern> * </pattern>
+<template>
+	<addtomap>
+	<name><get name="serie"/></name>
+	<key>subtitulos</key>
+	<value><srai>code <star/></srai></value>
+	</addtomap>
+  Subtitulos incluidos. Por favor, de una breve descripcion de la serie.
+<think><set name="topic">sinopsis</set></think>
+</template>
+</category>
+</topic>
+
+<topic name="sinopsis">
+<category>
+<pattern> * </pattern>
+<template>
+	<addtomap>
+	<name><get name="serie"/></name>
+	<key>sinopsis</key>
+	<value><srai>code <star/></srai></value>
+	</addtomap>
+  sinopsis incluido. Si conoce alguna web que pueda proporcionar mas informacion, por favor, indiquela a continuacion.
+<think><set name="topic">web</set></think>
+</template>
+</category>
+</topic>
+
+<topic name="web">
+<category>
+<pattern> * </pattern>
+<template>
+	<addtomap>
+	<name><get name="serie"/></name>
+	<key>web</key>
+	<value><srai>code <star/></srai></value>
+	</addtomap>
+  web con informacion extra incluida. Quiere incluir algun capitulo
+<think><set name="topic">capitulo</set></think>
+</template>
+</category>
+</topic>
+
+<topic name="capitulo">
+
+<category>
+<pattern> no ^</pattern>
+<template>
+De acuerdo, todo ha quedado registrado.
+<think><set name="topic">unknown</set></think>
+</template>
+</category>
+
+<category>
+<pattern> si ^</pattern>
+<template>
+Por favor, indique la temporada.
+<think><set name="topic">siguientecapitulo</set></think>
+</template>
+</category>
+</topic>
+
+
+
+
+
+
+
+</aiml>
